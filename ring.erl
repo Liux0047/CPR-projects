@@ -2,8 +2,7 @@
 -export([
     init/2,
     start/2,
-    work/2,
-    receive_msg/2
+    work/2
 ]).
 
 init(N, M) -> 

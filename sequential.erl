@@ -20,20 +20,12 @@ reverse_create(0) -> [];
 reverse_create(V) when V > 0 ->
     [V | reverse_create(V-1)].
 
-% create(V) ->
-%     create(V, []).
+create(V) ->
+    create(V, []).
 
-% create(0, Buff) -> Buff;
-% create(V, Buff) ->
-%     create(V-1, [V|Buff]).
-
-create(1, L) ->
-    [1 | L];
-create(N, L) ->
-    create(N -1, [N| L]).
-
-create(N) ->
-    create(N, []).
+create(0, Buff) -> Buff;
+create(V, Buff) ->
+    create(V-1, [V|Buff]).
 
 
 print_list(1) ->

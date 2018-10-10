@@ -18,7 +18,8 @@ write(Key, Element, DbRef) ->
     [{Key, Element} | delete(Key, DbRef)].
 
 
-
+delete(_, []) ->
+    [];
 delete(Key, [{Key, _} | T]) ->
     T;
 delete(Key, [P | T]) ->
