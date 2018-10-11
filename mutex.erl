@@ -11,8 +11,14 @@
 start() ->
     %exit(whereis(mutex), ok),
     register(mutex, spawn(mutex, free, [])),
-    start_proc(100, 200),
-    start_proc(40, 400).
+    start_proc(1000, 2000),
+    start_proc(1000, 2000),
+    start_proc(1000, 2000),
+    start_proc(1000, 2000),
+    start_proc(1000, 2000),
+    start_proc(1000, 2000),
+    start_proc(1000, 2000),
+    start_proc(400, 4000).
 
 start_proc(Timeout, Duration) ->
     timer:sleep(Timeout),
