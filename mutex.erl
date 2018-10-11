@@ -1,6 +1,7 @@
 -module(mutex).
 -export([
     start/0,
+    init_mutex/0,
     free/0,
     wait/0,
     signal/0,
@@ -9,16 +10,13 @@
 ]).
 
 start() ->
-    %exit(whereis(mutex), ok),
-    register(mutex, spawn(mutex, free, [])),
-    start_proc(1000, 2000),
-    start_proc(1000, 2000),
-    start_proc(1000, 2000),
-    start_proc(1000, 2000),
-    start_proc(1000, 2000),
-    start_proc(1000, 2000),
-    start_proc(1000, 2000),
-    start_proc(400, 4000).
+    register(mutex, spawn(mutex, init_mutex, [])).
+
+init_mutex() ->
+    process_flag(trap_exit, true),
+    register(pa, start_proc(1000, 4000)),
+    register(pb, start_proc(1000, 4000)),
+    free().
 
 start_proc(Timeout, Duration) ->
     timer:sleep(Timeout),
@@ -42,19 +40,24 @@ signal() ->
         ok -> io:format("Process ~p release lock~n", [self()])
     end.
 
+
 busy() ->
     receive
-        {signal, Pid} -> 
-            %io:format("Received signal", []),
-            Pid ! ok,
+        {signal, Pid} ->
+            Pid ! ok, 
+            unlink(Pid),
+            free();
+        {'EXIT', Pid, Reason} ->
+            io:format("Received EXIT in busy() from ~p, reason: ~s~n", [Pid, Reason]),
+            unlink(Pid),
             free()
     end.
 
 free() ->
     receive
         { wait, Pid } -> 
-            %io:format("Received wait", []),
             Pid ! ok,
+            link(Pid),
             busy()
     end.
 
