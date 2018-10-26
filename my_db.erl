@@ -7,17 +7,17 @@
 ]).
 
 start() ->
-    register(my_db, spawn(my_db, loop, [db:new()])).
+    register(?MODULE, spawn(?MODULE, loop, [db:new()])).
 
 write(Key, Element) ->
-    my_db ! {write, self(), {Key, Element}},
+    ?MODULE ! {write, self(), {Key, Element}},
     receive 
         ok -> io:format("ok in write")
     end.
 
 
 read(Key) ->
-    my_db ! {read, self(), Key},
+    ?MODULE ! {read, self(), Key},
     receive
         {ok, Element} -> 
             io:format("Ok got: ~p~n", [Element])

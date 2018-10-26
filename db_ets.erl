@@ -25,9 +25,15 @@ delete(Key, _) ->
 
 
 read(Key, _) ->
-    ets:lookup(persons, Key).
+    extract(ets:lookup(persons, Key)).
 
 match(Element, _) ->
     ets:match(persons, #person{name='$0', country=Element}).
+
+
+extract([]) -> 
+    {error, instance};
+extract([H | []]) ->
+    {ok, H}.
 
 % db_ets:write(a, 1, db_ets:write(b, 2, (db_ets:write(c, 3, db_ets:new())))).
