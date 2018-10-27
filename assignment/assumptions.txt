@@ -1,1 +1,2 @@
 1. docking station name is unique, no other processes has the same name
+2. race condition, releasing /securing mopeds at the same time
