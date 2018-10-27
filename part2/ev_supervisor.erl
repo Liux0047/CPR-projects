@@ -33,8 +33,8 @@ given_test() ->
         ok = docking:release_moped(station),
         ok = docking:release_moped(station),
         exit(whereis(station), kill),
-        timer:sleep(1000),
-        {error, empty} = docking:release_moped(station)
-        % ok = docking:release_moped(station)
+        timer:sleep(10),
+        {error, empty} = docking:release_moped(station),
+        docking_server:stop()
     ].
 

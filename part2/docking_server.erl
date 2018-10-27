@@ -18,16 +18,22 @@ create_station(Total, Occupied, StationName) ->
 
 % station creation should be synchronous
 handle_call({create, {Total, Occupied, StationName}}, _From, _) ->
-    Station = ets:lookup(docking_stations, StationName),
-    handle_create_station(Station, StationName, Total, Occupied).
+    case ets:insert_new(docking_stations, {StationName, Total, Occupied}) of
+        true -> 
+            % if there's no entry in ets
+            {reply, {Total, Occupied}, []};
+        false -> 
+            % otherwise use ets's record to recreate the station
+            [{_, T, O}] = ets:lookup(docking_stations, StationName),
+            {reply, {T, O}, []}
+    end.
 
 update_station(Total, Occupied, StationName) ->
     gen_server:cast(?MODULE, {update, {Total, Occupied, StationName}}).
 
 % station state update could be asynchronous
 handle_cast({update, {Total, Occupied, StationName}}, _) ->
-    ets:delete(docking_stations, StationName),
-    insert_station(StationName, Total, Occupied),
+    ets:insert(docking_stations, {StationName, Total, Occupied}), 
     {noreply, []};
 handle_cast(stop, _) ->
     {stop, normal, []}.
@@ -38,17 +44,4 @@ stop() ->
 terminate(_Reason, _Data) ->
     ets:delete(docking_stations),
     ok.
-
-% if there's no entry in ets
-handle_create_station([], StationName, Total, Occupied) ->
-    insert_station(StationName, Total, Occupied),
-    {reply, {Total, Occupied}, []};
-% otherwise use ets's record to recreate the station
-handle_create_station([{_StationName, [{total, Total}, {ocuupied, Occupied},_]}], _ ,_,  _) ->
-    {reply, {Total, Occupied}, []}.
-
-insert_station(StationName, Total, Occupied) ->
-    ets:insert(docking_stations, {StationName, [
-        {total, Total}, {ocuupied, Occupied}, {free, Total - Occupied}
-    ]}).
 
