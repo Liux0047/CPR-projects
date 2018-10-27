@@ -5,7 +5,8 @@
 -export([
     start_link/3, init/1, callback_mode/0, terminate/3,
     release_moped/1, secure_moped/1, get_info/1,
-    empty/3, idle/3, full/3
+    empty/3, idle/3, full/3,
+    unregister_proc/1
 ]).
 
 start_link(Total, Occupied, Name) ->

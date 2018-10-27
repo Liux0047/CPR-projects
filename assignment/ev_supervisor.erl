@@ -1,6 +1,6 @@
 -module(ev_supervisor).
-
 -behaviour(supervisor).
+-include_lib("eunit/include/eunit.hrl").
 
 -export([init/1, start_child/3, start_link/0]).
 
@@ -18,3 +18,22 @@ init(_) ->
 
 start_child(Total, Occupied, Name) ->
     supervisor:start_child(?MODULE, [Total, Occupied, Name]).
+
+
+% Tests
+given_test() -> 
+    [
+        docking:unregister_proc(kellogg),
+        docking:unregister_proc(station),
+        docking:unregister_proc(ev_supervisor),
+        {ok, _} = ev_supervisor:start_link(),
+        {ok, _} = ev_supervisor:start_child(3, 1, kellogg),
+        {ok, _} = ev_supervisor:start_child(3, 2, station),
+        ok = docking:release_moped(station),
+        ok = docking:release_moped(station),
+        exit(whereis(station), kill),
+        timer:sleep(1000),
+        % {error, empty} = docking:release_moped(station)
+        ok = docking:release_moped(station)
+    ].
+
