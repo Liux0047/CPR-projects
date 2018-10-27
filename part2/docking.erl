@@ -83,7 +83,7 @@ get_info(Name) ->
 callback_mode() ->
     state_functions.
 
-terminate(_Reason, State, _Data) ->
+terminate(_Reason, _State, _Data) ->
     ok.
 
 
@@ -92,6 +92,8 @@ terminate(_Reason, State, _Data) ->
 given_test() -> 
     [
         unregister_proc(kellogg),
+        unregister_proc(docking_server),
+        docking_server:start_link(),
         {ok, _} = start_link(3,1, kellogg),
         ok = release_moped(kellogg),
         {error, empty} = release_moped(kellogg),
@@ -99,12 +101,15 @@ given_test() ->
         ok = secure_moped(kellogg),
         ok = secure_moped(kellogg),
         {error, full} = secure_moped(kellogg),
-        {kellogg, [{total, 3}, {occupied, 3}, {free, 0}]} = get_info(kellogg)
+        {kellogg, [{total, 3}, {occupied, 3}, {free, 0}]} = get_info(kellogg),
+        docking_server:stop()
     ].
 
 empty_dock_test() ->
     [
         unregister_proc(empty_dock),
+        unregister_proc(docking_server),
+        docking_server:start_link(),
         {ok, _} = start_link(3,0, empty_dock),
         {empty_dock, [{total, 3}, {occupied, 0}, {free, 3}]} = get_info(empty_dock),
         {error, empty} = release_moped(empty_dock),
@@ -112,15 +117,19 @@ empty_dock_test() ->
         ok = secure_moped(empty_dock),
         {empty_dock, [{total, 3}, {occupied, 2}, {free, 1}]} = get_info(empty_dock),
         ok = secure_moped(empty_dock),
-        {error, full} = secure_moped(empty_dock)
+        {error, full} = secure_moped(empty_dock),
+        docking_server:stop()
     ].
 
 full_dock_test() ->
     [
         unregister_proc(full_dock),
+        unregister_proc(docking_server),
+        docking_server:start_link(),
         {ok, _} = start_link(1,1, full_dock),
         {error, full} = secure_moped(full_dock),
-        {full_dock, [{total, 1}, {occupied, 1}, {free, 0}]} = get_info(full_dock)
+        {full_dock, [{total, 1}, {occupied, 1}, {free, 0}]} = get_info(full_dock),
+        docking_server:stop()
     ].
 
 unregister_proc(Name) ->
