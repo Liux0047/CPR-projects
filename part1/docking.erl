@@ -79,6 +79,7 @@ callback_mode() ->
     state_functions.
 
 terminate(_Reason, State, _Data) ->
+    % to be handled in supervisor
     ok.
 
 
