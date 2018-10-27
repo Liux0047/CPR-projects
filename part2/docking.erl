@@ -10,8 +10,9 @@
 ]).
 
 start_link(Total, Occupied, Name) ->
-    docking_server:create_station(Total, Occupied, Name),
-    gen_statem:start_link({local,Name}, ?MODULE, {Total, Occupied}, []).
+    % use the record in docking_server if such one exists
+    {T, O}= docking_server:create_station(Total, Occupied, Name),
+    gen_statem:start_link({local,Name}, ?MODULE, {T, O}, []).
 
 init({Total, 0}) ->
     {ok, empty, {Total, 0}};

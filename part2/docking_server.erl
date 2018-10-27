@@ -39,11 +39,13 @@ terminate(_Reason, _Data) ->
     ets:delete(docking_stations),
     ok.
 
+% if there's no entry in ets
 handle_create_station([], StationName, Total, Occupied) ->
     insert_station(StationName, Total, Occupied),
-    {reply, ok, []};
-handle_create_station([_], _ ,_,  _) ->
-    {reply, existed, []}.
+    {reply, {Total, Occupied}, []};
+% otherwise use ets's record to recreate the station
+handle_create_station([{_StationName, [{total, Total}, {ocuupied, Occupied},_]}], _ ,_,  _) ->
+    {reply, {Total, Occupied}, []}.
 
 insert_station(StationName, Total, Occupied) ->
     ets:insert(docking_stations, {StationName, [

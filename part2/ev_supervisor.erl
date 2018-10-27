@@ -5,6 +5,7 @@
 -export([init/1, start_child/3, start_link/0]).
 
 start_link() ->
+    docking_server:start_link(),
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init(_) ->
@@ -33,7 +34,7 @@ given_test() ->
         ok = docking:release_moped(station),
         exit(whereis(station), kill),
         timer:sleep(1000),
-        % {error, empty} = docking:release_moped(station)
-        ok = docking:release_moped(station)
+        {error, empty} = docking:release_moped(station)
+        % ok = docking:release_moped(station)
     ].
 
