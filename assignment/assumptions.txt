@@ -1,0 +1,1 @@
+1. docking station name is unique, no other processes has the same name
