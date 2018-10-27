@@ -5,7 +5,7 @@
 -export([
     init/1, callback_mode/0, terminate/3,
     release_moped/1, secure_moped/1,
-    empty/3, idle/3
+    empty/3, idle/3, full/3
 ]).
 
 start_link(Total, Occupied, Name) ->
@@ -25,18 +25,31 @@ empty({call, From}, secure_moped, {Total, 0}) ->
     io:format("empty state | secure: next_state=idle from ~p~n", [From]),
     gen_statem:reply(From, ok),
     {next_state, idle, {Total, 1}}.
+    
 
-idle({call, From}, release_moped, {Total, 1}) ->
-    io:format("idle state | release: Total, 1~n",[]),
-    gen_statem:reply(From, ok),
-    {next_state, empty, {Total, 0}};
 idle({call, From}, release_moped, {Total, Occupied}) ->
-    io:format("idle state | release: Total, Occupied = ~p~n",[Occupied]),
+    io:format("idle state | release: Total=~p, Occupied = ~p~n",[Total, Occupied]),
     gen_statem:reply(From, ok),
-    {keep_state, {Total, Occupied -1}}.
+    case Occupied of
+        1 -> {next_state, empty, {Total, 0}};
+        _ -> {keep_state, {Total, Occupied -1}}
+    end;
+idle({call, From}, secure_moped, {Total, Occupied}) ->
+    io:format("idle state | secure: Total=~p, Occupied = ~p~n",[Total, Occupied]),
+    gen_statem:reply(From, ok),
+    case Occupied + 1 of
+        Total -> {next_state, full, {Total, Total}};
+        _ -> {keep_state, {Total, Occupied + 1}}
+    end.
 
-full() ->
-    ok.
+
+full({call, From}, secure_moped, _) ->
+    gen_statem:reply(From, {error, full}),
+    keep_state_and_data;
+full({call, From}, release_moped, {Total, _}) ->
+    gen_statem:reply(From, ok),
+    {next_state, idle, {Total, Total - 1}}.
+
 
 release_moped(Name) ->
     gen_statem:call(Name, release_moped).
@@ -44,9 +57,9 @@ release_moped(Name) ->
 secure_moped(Name) ->
     gen_statem:call(Name, secure_moped).
 
+
 callback_mode() ->
     state_functions.
-
 
 terminate(_Reason, State, _Data) ->
     ok.
