@@ -62,7 +62,14 @@ given_test_() ->
                 fun() ->
                     {ok, _} = ev_supervisor:start_child(3, 2, keble),
                     ?assertEqual(length(docking:find_moped(station)), 2)
-                end
+                end,
+                fun() ->
+                    exit(whereis(docking_server), kill),
+                    timer:sleep(100),
+                    {ok, _} = ev_supervisor:start_child(3, 1, kellogg),
+                    ?assertEqual(docking:release_moped(kellogg), ok)
+                end,
+                ?_assertEqual(docking:find_moped(kellogg), [])
             ]
         }
     }.
