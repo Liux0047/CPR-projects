@@ -1,3 +1,4 @@
 1. not able to creating a new station with the same name
-2. could be many stations? (more than 20)
+2. could be many stations? (more than 20), considering there are more than 30 colleges
 3. internal working could change, not using ets directly in docking
+4. not registering the table name
