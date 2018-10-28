@@ -10,8 +10,8 @@ start_link() ->
 
 init(_) ->
     SupFlags = #{strategy => simple_one_for_one,
-		intensity => 5, 
-        period => 3600},
+		intensity => 1, 
+        period => 5},
     ChildSpecs = #{id => docking,
 		   start => {docking, start_link, []},
 		   shutdown => brutal_kill},

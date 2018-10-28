@@ -5,20 +5,26 @@
 -export([init/1, start_child/3, start_link/0]).
 
 start_link() ->
-    docking_server:start_link(),
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init(_) ->
-    SupFlags = #{strategy => simple_one_for_one,
-		intensity => 5, 
-        period => 3600},
-    ChildSpecs = #{id => docking,
-		   start => {docking, start_link, []},
+    SupFlags = #{strategy => one_for_all,
+		intensity => 1, 
+        period => 5},
+    ChildSpecs = [
+        #{id => docking_server,
+		   start => {docking_server, start_link, []},
+           restart => permanent,
 		   shutdown => brutal_kill},
-    {ok, {SupFlags, [ChildSpecs]}}.
+        #{id => station_supervisor,
+            start => {station_supervisor, start_link, []},
+            restart => permanent,
+            worker => supervisor}   
+        ],
+    {ok, {SupFlags, ChildSpecs}}.
 
 start_child(Total, Occupied, Name) ->
-    supervisor:start_child(?MODULE, [Total, Occupied, Name]).
+    station_supervisor:start_child(Total, Occupied, Name).
 
 
 % Tests
@@ -29,7 +35,7 @@ given_test_() ->
                 {ok, _} = ev_supervisor:start_link()
             end,
             fun(_) ->
-                docking_server:stop()
+                ok
             end,
             [
                 fun() -> 
