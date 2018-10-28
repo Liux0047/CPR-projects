@@ -21,7 +21,7 @@ create_station(Total, Occupied, StationName) ->
     gen_server:call(?MODULE, {create, {Total, Occupied, StationName}}).
 
 update_station(Total, Occupied, StationName) ->
-    gen_server:cast(?MODULE, {update, {Total, Occupied, StationName}}).
+    gen_server:call(?MODULE, {update, {Total, Occupied, StationName}}).
 
 find_moped(Name) ->
     gen_server:call(?MODULE, {find_moped, Name}).
@@ -41,6 +41,9 @@ handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationsDbRe
             [{_, T, O}] = ets:lookup(DockingStationsDbRef, StationName),
             {reply, {T, O}, DockingStationsDbRef}
     end;
+handle_call({update, {Total, Occupied, StationName}}, _From, DockingStationsDbRef) ->
+    ets:insert(DockingStationsDbRef, {StationName, Total, Occupied}), 
+    {reply, ok, DockingStationsDbRef};
 handle_call({find_moped, Name}, _From, DockingStationsDbRef) ->
     MS = ets:fun2ms(fun({StationName, Total, Occupied}) when Occupied > 0, StationName /= Name ->
         {StationName, Total, Occupied} end),
@@ -51,10 +54,6 @@ handle_call({find_docking_point, Name}, _From, DockingStationsDbRef) ->
     {reply, ets:select(DockingStationsDbRef, MS), DockingStationsDbRef}.
 
 
-% station state update could be asynchronous
-handle_cast({update, {Total, Occupied, StationName}}, DockingStationsDbRef) ->
-    ets:insert(DockingStationsDbRef, {StationName, Total, Occupied}), 
-    {noreply, DockingStationsDbRef};
 handle_cast(stop, DockingStationsDbRef) ->
     {stop, normal, DockingStationsDbRef}.
 

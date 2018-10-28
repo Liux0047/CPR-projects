@@ -27,8 +27,8 @@ empty({call, From}, {release_moped, _}, {_, 0}) ->
     gen_statem:reply(From, {error, empty}),
     keep_state_and_data;
 empty({call, From}, {secure_moped, Name}, {Total, 0}) ->
-    gen_statem:reply(From, ok),
     docking_server:update_station(Total, 1, Name),
+    gen_statem:reply(From, ok),
     {next_state, idle, {Total, 1}};
 empty({call, From}, {get_info, Name}, {Total, 0}) ->
     gen_statem:reply(From, format_response({Name, Total, 0})),
@@ -36,15 +36,15 @@ empty({call, From}, {get_info, Name}, {Total, 0}) ->
     
 
 idle({call, From}, {release_moped, Name}, {Total, Occupied}) ->
-    gen_statem:reply(From, ok),
     docking_server:update_station(Total, Occupied - 1, Name),
+    gen_statem:reply(From, ok),
     case Occupied of
         1 -> {next_state, empty, {Total, 0}};
         _ -> {keep_state, {Total, Occupied -1}}
     end;
 idle({call, From}, {secure_moped, Name}, {Total, Occupied}) ->
-    gen_statem:reply(From, ok),
     docking_server:update_station(Total, Occupied + 1, Name),
+    gen_statem:reply(From, ok),
     case Occupied + 1 of
         Total -> {next_state, full, {Total, Total}};
         _ -> {keep_state, {Total, Occupied + 1}}
@@ -58,8 +58,8 @@ full({call, From}, {secure_moped, _}, _) ->
     gen_statem:reply(From, {error, full}),
     keep_state_and_data;
 full({call, From}, {release_moped, Name}, {Total, _}) ->
-    gen_statem:reply(From, ok),
     docking_server:update_station(Total, Total -1, Name),
+    gen_statem:reply(From, ok),
     {next_state, idle, {Total, Total - 1}};
 full({call, From}, {get_info, Name}, {Total, _}) ->
     gen_statem:reply(From, format_response({Name, Total, Total})),
