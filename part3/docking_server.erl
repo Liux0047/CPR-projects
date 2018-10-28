@@ -12,6 +12,7 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_) ->
+    process_flag(trap_exit, true),
     DockingStationsDbRef = ets:new(docking_stations, [set]),
     {ok, DockingStationsDbRef}.
 
