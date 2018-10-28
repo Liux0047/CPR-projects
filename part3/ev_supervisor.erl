@@ -43,7 +43,20 @@ given_test_() ->
                 end,
                 ?_assertEqual(docking:find_moped(station), [
                     {kellogg, [{total, 3}, {occupied, 1}, {free, 2}]}
-                ])
+                ]),
+                ?_assertEqual(docking:find_moped(kellogg), []),
+                ?_assertEqual(docking:find_docking_point(kellogg), [
+                    {station, [{total, 3}, {occupied, 0}, {free, 3}]}
+                ]),
+                fun() ->
+                    ?assertEqual(docking:secure_moped(kellogg), ok),
+                    ?assertEqual(docking:secure_moped(kellogg), ok),
+                    ?assertEqual(docking:find_docking_point(station), [])
+                end,
+                fun() ->
+                    {ok, _} = ev_supervisor:start_child(3, 2, keble),
+                    ?assertEqual(length(docking:find_moped(station)), 2)
+                end
             ]
         }
     }.
