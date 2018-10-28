@@ -8,7 +8,7 @@ start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init(_) ->
-    SupFlags = #{strategy => one_for_all,   % restart all child processes if one crashed
+    SupFlags = #{strategy => rest_for_one,   % restart all child processes if server process crashed
 		intensity => 1, 
         period => 5},
     ChildSpecs = [

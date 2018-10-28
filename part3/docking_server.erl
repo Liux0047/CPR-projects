@@ -12,8 +12,9 @@ start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init(_) ->
-    process_flag(trap_exit, true),
-    DockingStationsDbRef = ets:new(docking_stations, [set]),
+    process_flag(trap_exit, true), % trapping exit to clean up state
+    % not using named_table to avoid access from other processes
+    DockingStationsDbRef = ets:new(docking_stations, [set, private]),
     {ok, DockingStationsDbRef}.
 
 create_station(Total, Occupied, StationName) ->

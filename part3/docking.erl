@@ -3,11 +3,10 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -export([
-    start_link/3, init/1, callback_mode/0, terminate/3,
+    start_link/3, init/1, callback_mode/0, stop/1, terminate/3,
     release_moped/1, secure_moped/1, get_info/1,
     empty/3, idle/3, full/3,
-    unregister_proc/1,
-    find_moped/1, find_docking_point/1, format_response/1
+    find_moped/1, find_docking_point/1
 ]).
 
 start_link(Total, Occupied, Name) ->
@@ -88,6 +87,9 @@ format_response({StationName, Total, Occupied}) ->
 callback_mode() ->
     state_functions.
 
+stop(Name) ->
+    gen_statem:stop(Name).
+
 terminate(_Reason, _State, _Data) ->
     ok.
 
@@ -96,8 +98,6 @@ terminate(_Reason, _State, _Data) ->
 % Tests
 given_test() -> 
     [
-        unregister_proc(kellogg),
-        unregister_proc(docking_server),
         docking_server:start_link(),
         {ok, _} = start_link(3,1, kellogg),
         ok = release_moped(kellogg),
@@ -107,13 +107,12 @@ given_test() ->
         ok = secure_moped(kellogg),
         {error, full} = secure_moped(kellogg),
         {kellogg, [{total, 3}, {occupied, 3}, {free, 0}]} = get_info(kellogg),
+        stop(kellogg),
         docking_server:stop()
     ].
 
 empty_dock_test() ->
     [
-        unregister_proc(empty_dock),
-        unregister_proc(docking_server),
         docking_server:start_link(),
         {ok, _} = start_link(3,0, empty_dock),
         {empty_dock, [{total, 3}, {occupied, 0}, {free, 3}]} = get_info(empty_dock),
@@ -123,22 +122,16 @@ empty_dock_test() ->
         {empty_dock, [{total, 3}, {occupied, 2}, {free, 1}]} = get_info(empty_dock),
         ok = secure_moped(empty_dock),
         {error, full} = secure_moped(empty_dock),
+        stop(empty_dock),
         docking_server:stop()
     ].
 
 full_dock_test() ->
     [
-        unregister_proc(full_dock),
-        unregister_proc(docking_server),
         docking_server:start_link(),
         {ok, _} = start_link(1,1, full_dock),
         {error, full} = secure_moped(full_dock),
         {full_dock, [{total, 1}, {occupied, 1}, {free, 0}]} = get_info(full_dock),
+        stop(full_dock),
         docking_server:stop()
     ].
-
-unregister_proc(Name) ->
-    case whereis(Name) of
-        undefined -> ok;
-        _ -> unregister(Name)
-    end.
