@@ -30,7 +30,9 @@ find_docking_point(Name) ->
     gen_server:call(?MODULE, {find_docking_point, Name}).
 
 
-% station creation should be synchronous
+% station creation should be synchronous because:
+% make sure the updated state is stored before advancing to the next state
+% in case of non-existing server or a server crashes before sending reply, calling process will terminate
 handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationsDbRef) ->
     case ets:insert_new(DockingStationsDbRef, {StationName, Total, Occupied}) of
         true -> 
@@ -54,13 +56,15 @@ handle_call({find_docking_point, Name}, _From, DockingStationsDbRef) ->
     {reply, ets:select(DockingStationsDbRef, MS), DockingStationsDbRef}.
 
 
-handle_cast(stop, DockingStationsDbRef) ->
-    {stop, normal, DockingStationsDbRef}.
-
 stop() ->
     gen_server:cast(?MODULE, stop).
+
+handle_cast(stop, DockingStationsDbRef) ->
+    {stop, normal, DockingStationsDbRef}.
 
 terminate(_Reason, DockingStationsDbRef) ->
     ets:delete(DockingStationsDbRef),
     ok.
 
+% implementing handle_info/2 could prevent process crash from random messages sent to docking_server
+% However this is considered defensive programming, thus not encouraged in concurrent model
