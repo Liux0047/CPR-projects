@@ -14,7 +14,9 @@ init(_) ->
         period => 5},
     ChildSpecs = #{id => docking,
 		   start => {docking, start_link, []},
-		   shutdown => brutal_kill},
+           restart => transient,
+		   shutdown => brutal_kill,
+           modules => [docking]},
     {ok, {SupFlags, [ChildSpecs]}}.
 
 start_child(Total, Occupied, Name) ->
