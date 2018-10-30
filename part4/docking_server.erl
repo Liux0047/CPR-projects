@@ -5,7 +5,7 @@
 -export([
     start_link/1, init/1, handle_call/3, handle_cast/2, terminate/2,
     create_station/3, update_station/3, stop/0,
-    find_moped/1, find_docking_point/1
+    find_moped/1, find_docking_point/1, get_all_stations/0
 ]).
 
 start_link(DockingStationDbRef) ->
@@ -27,6 +27,8 @@ find_moped(Name) ->
 find_docking_point(Name) ->
     gen_server:call(?MODULE, {find_docking_point, Name}).
 
+get_all_stations() ->
+    gen_server:call(?MODULE, get_all_stations).
 
 % station creation should be synchronous because:
 % make sure the updated state is stored before advancing to the next state
@@ -51,8 +53,9 @@ handle_call({find_moped, Name}, _From, DockingStationDbRef) ->
 handle_call({find_docking_point, Name}, _From, DockingStationDbRef) ->
     MS = ets:fun2ms(fun({StationName, Total, Occupied}) when Total - Occupied > 0, StationName /= Name ->
         {StationName, Total, Occupied} end),
-    {reply, ets:select(DockingStationDbRef, MS), DockingStationDbRef}.
-
+    {reply, ets:select(DockingStationDbRef, MS), DockingStationDbRef};
+handle_call(get_all_stations, _From, DockingStationDbRef) ->
+    {reply, traverse_table(DockingStationDbRef, ets:first(DockingStationDbRef)), DockingStationDbRef}.
 
 stop() ->
     gen_server:cast(?MODULE, stop).
@@ -67,3 +70,9 @@ terminate(_Reason, _DockingStationDbRef) ->
 
 % implementing handle_info/2 could prevent process crash from random messages sent to docking_server
 % However this is considered defensive programming, thus not encouraged in concurrent model
+
+traverse_table(_DockingStationDbRef, '$end_of_table') ->
+    [];
+traverse_table(DockingStationDbRef, Current) ->
+    [Elem] = ets:lookup(DockingStationDbRef, Current),
+    [Elem | traverse_table(DockingStationDbRef, ets:next(DockingStationDbRef, Current))].
