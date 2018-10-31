@@ -1,7 +1,5 @@
 -module(docking_listener).
--export([
-    start_link/0, init/0, listen/0
-]).
+-export([start_link/0, init/0, listen/0]).
 
 start_link() ->
     Pid = spawn_link(?MODULE, init, []),

@@ -2,10 +2,10 @@
 -behaviour(gen_statem).
 -include_lib("eunit/include/eunit.hrl").
 
+-export([start_link/3, init/1, callback_mode/0, stop/1, terminate/3]).
+-export([empty/3, idle/3, full/3]).
 -export([
-    start_link/3, init/1, callback_mode/0, stop/1, terminate/3,
     release_moped/1, secure_moped/1, get_info/1,
-    empty/3, idle/3, full/3,
     find_moped/1, find_docking_point/1,
     release_moped_remote/2, secure_moped_remote/2
 ]).

@@ -1,9 +1,7 @@
 -module(station_supervisor).
 -behaviour(supervisor).
 
--export([
-    start_link/0, init/1, start_child/3
-]).
+-export([start_link/0, init/1, start_child/3]).
 
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
