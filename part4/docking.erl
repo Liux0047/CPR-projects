@@ -103,8 +103,8 @@ secure_moped_remote(Name, ServerNode) ->
 call_remote(Name, ServerNode, Action) ->
     {docking_listener, ServerNode} ! {Action, Name, self()},
     receive
-        ok -> ok;
-        {error, Reason} -> {error, Reason}
+        {reply, ok} -> ok;
+        {reply, error, Reason} -> {error, Reason}
     end.
 
 % Tests

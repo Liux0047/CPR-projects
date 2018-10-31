@@ -12,9 +12,9 @@ init() ->
 listen() ->
     receive
         {release_moped, Name, From} ->
-            From ! docking:release_moped(Name),
+            From ! {reply, docking:release_moped(Name)},
             listen();
         {secure_moped, Name, From} ->
-            From ! docking:secure_moped(Name),
+            From ! {reply, docking:secure_moped(Name)},
             listen()
     end.
