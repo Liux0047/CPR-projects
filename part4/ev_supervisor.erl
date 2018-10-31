@@ -7,7 +7,7 @@
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-init(_) ->
+init(_Args) ->
     % creating ETS in supervisor to avoid losing state when server process crashes
     % not using named_table to avoid access from other processes
     DockingStationDbRef = ets:new(docking_stations, [set, public]),

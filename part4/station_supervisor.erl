@@ -8,7 +8,7 @@
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
-init(_) ->
+init(_Args) ->
     SupFlags = #{strategy => simple_one_for_one,    % all children are dynamically created
 		intensity => 1, 
         period => 5},

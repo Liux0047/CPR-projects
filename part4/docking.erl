@@ -23,7 +23,7 @@ init({Total, Occupied}) ->
     {ok, idle, {Total, Occupied}}. 
 
 
-empty({call, From}, {release_moped, _}, {_, 0}) ->
+empty({call, From}, {release_moped, _Name}, {_Total, 0}) ->
     gen_statem:reply(From, {error, empty}),
     keep_state_and_data;
 empty({call, From}, {secure_moped, Name}, {Total, 0}) ->
@@ -54,14 +54,14 @@ idle({call, From}, {get_info, Name}, {Total, Occupied}) ->
     keep_state_and_data.
 
 
-full({call, From}, {secure_moped, _}, _) ->
+full({call, From}, {secure_moped, _Name}, {_Total, _Occupied}) ->
     gen_statem:reply(From, {error, full}),
     keep_state_and_data;
-full({call, From}, {release_moped, Name}, {Total, _}) ->
+full({call, From}, {release_moped, Name}, {Total, _Occupied}) ->
     docking_server:update_station(Total, Total -1, Name),
     gen_statem:reply(From, ok),
     {next_state, idle, {Total, Total - 1}};
-full({call, From}, {get_info, Name}, {Total, _}) ->
+full({call, From}, {get_info, Name}, {Total, _Occupied}) ->
     gen_statem:reply(From, format_response({Name, Total, Total})),
     keep_state_and_data.
 
