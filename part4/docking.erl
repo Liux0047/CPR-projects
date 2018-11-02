@@ -1,3 +1,7 @@
+%% @author Xiao Liu <liux0047@gmail.com>
+%% @doc This module is a state machine for docking station using gen_statem OTP behaviour.
+%% It also provides interface for its client
+
 -module(docking).
 -behaviour(gen_statem).
 -include_lib("eunit/include/eunit.hrl").
@@ -10,11 +14,21 @@
     release_moped_remote/2, secure_moped_remote/2
 ]).
 
+%% @doc Start a docking station called Name and links to the the caller process using gen_statem:start_link.
+%% Also registering this docking station locally with Name.<br/>
+%% `Total': Total number of docking stations<br/>
+%% `Occupied': Number of docking stations already occupied<br/>
+%% `Name': Name of station, also the registered process name<br/>
+-spec start_link(Total::number(), Occupied::number(), Name::string()) ->
+    {ok, pid()}.
 start_link(Total, Occupied, Name) ->
     % use the record in docking_server if such one exists
     {T, O}= docking_server:create_station(Total, Occupied, Name),
     gen_statem:start_link({local,Name}, ?MODULE, {T, O}, []).
 
+
+%% @doc Init callback of gen_statem; initializing the state of docking station
+-spec init({Total::number(), Occupied::number()}) -> {ok, atom(), {number(), number()}}.
 init({Total, 0}) ->
     {ok, empty, {Total, 0}};
 init({Total, Total}) ->
@@ -22,7 +36,7 @@ init({Total, Total}) ->
 init({Total, Occupied}) ->
     {ok, idle, {Total, Occupied}}. 
 
-
+%% @doc Empty state of Module:StateName/3 from gen_statem when Occupied = 0
 empty({call, From}, {release_moped, _Name}, {_Total, 0}) ->
     gen_statem:reply(From, {error, empty}),
     keep_state_and_data;
@@ -34,7 +48,7 @@ empty({call, From}, {get_info, Name}, {Total, 0}) ->
     gen_statem:reply(From, format_response({Name, Total, 0})),
     keep_state_and_data.
     
-
+%% @doc Idle state of Module:StateName/3 from gen_statem when Total > Occupied > 0
 idle({call, From}, {release_moped, Name}, {Total, Occupied}) ->
     docking_server:update_station(Total, Occupied - 1, Name),
     gen_statem:reply(From, ok),
@@ -53,7 +67,7 @@ idle({call, From}, {get_info, Name}, {Total, Occupied}) ->
     gen_statem:reply(From, format_response({Name, Total, Occupied})),
     keep_state_and_data.
 
-
+%% @doc Full state of Module:StateName/3 from gen_statem when Total = Occupied
 full({call, From}, {secure_moped, _Name}, {_Total, _Occupied}) ->
     gen_statem:reply(From, {error, full}),
     keep_state_and_data;
@@ -66,18 +80,28 @@ full({call, From}, {get_info, Name}, {Total, _Occupied}) ->
     keep_state_and_data.
 
 
+%% @doc Release a moped from the station. Returns {error, empty} if station is empty
+-spec release_moped(Name::atom()) -> ok | {error, empty}.
 release_moped(Name) ->
     gen_statem:call(Name, {release_moped, Name}).
 
+%% @doc Secure a moped from the station. Returns {error, full} if station is full
+-spec secure_moped(Name::atom()) -> ok | {error, full}.
 secure_moped(Name) ->
     gen_statem:call(Name, {secure_moped, Name}).
 
+%% @doc Gets the information about the station
+-spec get_info(Name::atom()) -> term().
 get_info(Name) ->
     gen_statem:call(Name, {get_info, Name}).
 
+%% @doc Find the list of stations that have mopeds available, excluding the one interrogated
+-spec find_moped(Name::atom()) -> list().
 find_moped(Name) ->
     lists:map(fun format_response/1, docking_server:find_moped(Name)).
 
+%% @doc Find the list of stations that have docking points available, excluding the one interrogated
+-spec find_docking_point(Name::atom()) -> list().
 find_docking_point(Name) ->
     lists:map(fun format_response/1, docking_server:find_docking_point(Name)).
 
@@ -85,12 +109,16 @@ find_docking_point(Name) ->
 format_response({StationName, Total, Occupied}) ->
     {StationName, [{total, Total}, {occupied, Occupied}, {free, Total - Occupied}]}.
 
+%% @doc Use state_functions for finite state machine
 callback_mode() ->
     state_functions.
 
+%% @doc Stop the process of docking station called Name
+-spec stop(Name::atom()) -> ok.
 stop(Name) ->
     gen_statem:stop(Name).
 
+%% @doc Terminate callback for any cleanup
 terminate(_Reason, _State, _Data) ->
     ok.
 

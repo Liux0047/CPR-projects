@@ -1,0 +1,123 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module docking</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module docking</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>This module is a state machine for docking station using gen_statem OTP behaviour.
+
+<p><b>Behaviours:</b> <a href="gen_statem.html"><tt>gen_statem</tt></a>.</p>
+<p><b>Authors:</b> Xiao Liu (<a href="mailto:liux0047@gmail.com"><tt>liux0047@gmail.com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2>This module is a state machine for docking station using gen_statem OTP behaviour.
+  It also provides interface for its client
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#callback_mode-0">callback_mode/0</a></td><td>Use state_functions for finite state machine.</td></tr>
+<tr><td valign="top"><a href="#empty-3">empty/3</a></td><td>Empty state of Module:StateName/3 from gen_statem when Occupied = 0.</td></tr>
+<tr><td valign="top"><a href="#find_docking_point-1">find_docking_point/1</a></td><td>Find the list of stations that have docking points available, excluding the one interrogated.</td></tr>
+<tr><td valign="top"><a href="#find_moped-1">find_moped/1</a></td><td>Find the list of stations that have mopeds available, excluding the one interrogated.</td></tr>
+<tr><td valign="top"><a href="#full-3">full/3</a></td><td>Full state of Module:StateName/3 from gen_statem when Total = Occupied.</td></tr>
+<tr><td valign="top"><a href="#get_info-1">get_info/1</a></td><td>Gets the information about the station.</td></tr>
+<tr><td valign="top"><a href="#idle-3">idle/3</a></td><td>Idle state of Module:StateName/3 from gen_statem when Total &gt; Occupied &gt; 0.</td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td>Init callback of gen_statem; initializing the state of docking station.</td></tr>
+<tr><td valign="top"><a href="#release_moped-1">release_moped/1</a></td><td>Release a moped from the station.</td></tr>
+<tr><td valign="top"><a href="#release_moped_remote-2">release_moped_remote/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#secure_moped-1">secure_moped/1</a></td><td>Secure a moped from the station.</td></tr>
+<tr><td valign="top"><a href="#secure_moped_remote-2">secure_moped_remote/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_link-3">start_link/3</a></td><td>Start a docking station called Name and links to the the caller process using gen_statem:start_link.</td></tr>
+<tr><td valign="top"><a href="#stop-1">stop/1</a></td><td>Stop the process of docking station called Name.</td></tr>
+<tr><td valign="top"><a href="#terminate-3">terminate/3</a></td><td>Terminate callback for any cleanup.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="callback_mode-0">callback_mode/0</a></h3>
+<div class="spec">
+<p><tt>callback_mode() -&gt; any()</tt></p>
+</div><p>Use state_functions for finite state machine</p>
+
+<h3 class="function"><a name="empty-3">empty/3</a></h3>
+<div class="spec">
+<p><tt>empty(X1, X2, X3) -&gt; any()</tt></p>
+</div><p>Empty state of Module:StateName/3 from gen_statem when Occupied = 0</p>
+
+<h3 class="function"><a name="find_docking_point-1">find_docking_point/1</a></h3>
+<div class="spec">
+<p><tt>find_docking_point(Name::atom()) -&gt; list()</tt><br></p>
+</div><p>Find the list of stations that have docking points available, excluding the one interrogated</p>
+
+<h3 class="function"><a name="find_moped-1">find_moped/1</a></h3>
+<div class="spec">
+<p><tt>find_moped(Name::atom()) -&gt; list()</tt><br></p>
+</div><p>Find the list of stations that have mopeds available, excluding the one interrogated</p>
+
+<h3 class="function"><a name="full-3">full/3</a></h3>
+<div class="spec">
+<p><tt>full(X1, X2, X3) -&gt; any()</tt></p>
+</div><p>Full state of Module:StateName/3 from gen_statem when Total = Occupied</p>
+
+<h3 class="function"><a name="get_info-1">get_info/1</a></h3>
+<div class="spec">
+<p><tt>get_info(Name::atom()) -&gt; term()</tt><br></p>
+</div><p>Gets the information about the station</p>
+
+<h3 class="function"><a name="idle-3">idle/3</a></h3>
+<div class="spec">
+<p><tt>idle(X1, X2, X3) -&gt; any()</tt></p>
+</div><p>Idle state of Module:StateName/3 from gen_statem when Total &gt; Occupied &gt; 0</p>
+
+<h3 class="function"><a name="init-1">init/1</a></h3>
+<div class="spec">
+<p><tt>init(X1::{Total::number(), Occupied::number()}) -&gt; {ok, atom(), {number(), number()}}</tt><br></p>
+</div><p>Init callback of gen_statem; initializing the state of docking station</p>
+
+<h3 class="function"><a name="release_moped-1">release_moped/1</a></h3>
+<div class="spec">
+<p><tt>release_moped(Name::atom()) -&gt; ok | {error, empty}</tt><br></p>
+</div><p>Release a moped from the station. Returns {error, empty} if station is empty</p>
+
+<h3 class="function"><a name="release_moped_remote-2">release_moped_remote/2</a></h3>
+<div class="spec">
+<p><tt>release_moped_remote(Name, ServerNode) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="secure_moped-1">secure_moped/1</a></h3>
+<div class="spec">
+<p><tt>secure_moped(Name::atom()) -&gt; ok | {error, full}</tt><br></p>
+</div><p>Secure a moped from the station. Returns {error, full} if station is full</p>
+
+<h3 class="function"><a name="secure_moped_remote-2">secure_moped_remote/2</a></h3>
+<div class="spec">
+<p><tt>secure_moped_remote(Name, ServerNode) -&gt; any()</tt></p>
+</div>
+
+<h3 class="function"><a name="start_link-3">start_link/3</a></h3>
+<div class="spec">
+<p><tt>start_link(Total::number(), Occupied::number(), Name::string()) -&gt; {ok, pid()}</tt><br></p>
+</div><p>Start a docking station called Name and links to the the caller process using gen_statem:start_link.
+  Also registering this docking station locally with Name.<br>
+  <code>Total</code>: Total number of docking stations<br>
+  <code>Occupied</code>: Number of docking stations already occupied<br>
+  <code>Name</code>: Name of station, also the registered process name<br></p>
+
+<h3 class="function"><a name="stop-1">stop/1</a></h3>
+<div class="spec">
+<p><tt>stop(Name::atom()) -&gt; ok</tt><br></p>
+</div><p>Stop the process of docking station called Name</p>
+
+<h3 class="function"><a name="terminate-3">terminate/3</a></h3>
+<div class="spec">
+<p><tt>terminate(Reason, State, Data) -&gt; any()</tt></p>
+</div><p>Terminate callback for any cleanup</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>
