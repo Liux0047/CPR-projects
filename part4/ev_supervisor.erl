@@ -20,7 +20,7 @@ start_link() ->
 init(_Args) ->
     % creating ETS in supervisor to avoid losing state when server process crashes
     % not using named_table to avoid access from other processes
-    DockingStationDbRef = ets:new(docking_stations, [set, public]),
+    DockingStationDbRef = docking_server:empty(),
     SupFlags = #{strategy => rest_for_one,   % restart all child processes if server process crashed
 		intensity => 1, 
         period => 5},

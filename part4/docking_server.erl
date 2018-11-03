@@ -7,7 +7,7 @@
 -include_lib("stdlib/include/ms_transform.hrl").
 
 -export([start_link/1, init/1, handle_call/3, handle_cast/2, terminate/2]).
--export([create_station/3, update_station/3, get_all_stations/0, stop/0]).
+-export([create_station/3, update_station/3, get_all_stations/0, stop/0, empty/0]).
 -export([find_moped/1, find_docking_point/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -20,6 +20,13 @@
 -spec start_link(DockingStationDbRef::atom()) -> {ok, pid()}.
 start_link(DockingStationDbRef) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, DockingStationDbRef, []).
+
+%% @doc Creates the internal data structure that's going to be used for this module.
+%% In future if the internal data structure can be changed without changing client code. 
+%% Initially thi should be an empty construct.
+-spec empty() -> atom().
+empty() ->
+    ets:new(docking_stations, [set, public]).
 
 %% @doc Records a station creation; if the station is already created, return its latest state
 -spec create_station(Total::number(), Occupied::number(), StationName::atom()) -> 
