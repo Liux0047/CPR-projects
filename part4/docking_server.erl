@@ -1,3 +1,7 @@
+%% @author Xiao Liu <liux0047@gmail.com>
+%% @doc This module records the state of all docking stations using gen_server OPT behaviour
+%% It also provides interface for its client
+
 -module(docking_server).
 -behaviour(gen_server).
 -include_lib("stdlib/include/ms_transform.hrl").
@@ -6,32 +10,51 @@
 -export([create_station/3, update_station/3, get_all_stations/0, stop/0]).
 -export([find_moped/1, find_docking_point/1]).
 
-    
+%% @doc Start the server called docking_server and links to the the caller process using gen_server:start_link.
+%% Also registering this docking station locally with docking_server.<br/>
+%% A reference of ETS table is required, because the state should be kept even if the process crashes 
+-spec start_link(DockingStationDbRef::atom()) -> {ok, pid()}.
 start_link(DockingStationDbRef) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, DockingStationDbRef, []).
 
+%% @doc Init callback of gen_server, trapping exit here 
+-spec init(DockingStationDbRef::atom()) -> {ok, atom()}.
 init(DockingStationDbRef) ->
-    process_flag(trap_exit, true), % trapping exit to clean up state
+    process_flag(trap_exit, true), % trapping exit to enable termniate to execute
     {ok, DockingStationDbRef}.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The client functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @doc Records a station creation; if the station is already created, return its latest state
+-spec create_station(Total::number(), Occupied::number(), StationName::atom()) -> 
+    {Total::number(), Occupied::number()}.
 create_station(Total, Occupied, StationName) ->
     gen_server:call(?MODULE, {create, {Total, Occupied, StationName}}).
 
+%% @doc Records a station update
+-spec update_station(Total::number(), Occupied::number(), StationName::atom()) -> ok.
 update_station(Total, Occupied, StationName) ->
     gen_server:call(?MODULE, {update, {Total, Occupied, StationName}}).
 
+%% @doc Find a list of stations with at least one moped
+-spec find_moped(Name::atom()) -> list().
 find_moped(Name) ->
     gen_server:call(?MODULE, {find_moped, Name}).
 
+%% @doc Find a list of stations with at least one docking point
+-spec find_docking_point(Name::atom()) -> list().
 find_docking_point(Name) ->
     gen_server:call(?MODULE, {find_docking_point, Name}).
 
 get_all_stations() ->
     gen_server:call(?MODULE, get_all_stations).
 
-% station creation should be synchronous because:
-% make sure the updated state is stored before advancing to the next state
-% in case of non-existing server or a server crashes before sending reply, calling process will terminate
+%% @doc Hand synchrounous calls to the server.<br/>
+%% Station creation/update should be synchronous because to prevent race condition,
+%% updated state should be first stored before advancing to the next state. <br/>
+%% in case of non-existing server or a server crashes before sending reply, calling process will terminate
 handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationDbRef) ->
     case ets:insert_new(DockingStationDbRef, {StationName, Total, Occupied}) of
         true -> 
