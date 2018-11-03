@@ -1,0 +1,2 @@
+c(docking). c(docking_server). c(ev_supervisor). c(station_supervisor). c(docking_listener). c(station_recoverer).
+spawn('Cam@node', ev_supervisor, start_link, [])

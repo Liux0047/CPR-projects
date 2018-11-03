@@ -57,7 +57,6 @@ init(DockingStationDbRef) ->
 %% @doc Hand synchronous calls to the server.<br/>
 %% Station creation/update should be synchronous because to prevent race condition,
 %% updated state should be first stored before advancing to the next state. <br/>
-%% in case of non-existing server or a server crashes before sending reply, calling process will terminate
 handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationDbRef) ->
     case ets:insert_new(DockingStationDbRef, {StationName, Total, Occupied}) of
         true -> 
@@ -71,16 +70,6 @@ handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationDbRef
 handle_call({update, {Total, Occupied, StationName}}, _From, DockingStationDbRef) ->
     ets:insert(DockingStationDbRef, {StationName, Total, Occupied}), 
     {reply, ok, DockingStationDbRef};
-handle_call({find_moped, Name}, _From, DockingStationDbRef) ->
-    % select stations with Occupied > 0
-    MS = ets:fun2ms(fun({StationName, Total, Occupied}) when Occupied > 0, StationName /= Name ->
-        {StationName, Total, Occupied} end),
-    {reply, ets:select(DockingStationDbRef, MS), DockingStationDbRef};
-handle_call({find_docking_point, Name}, _From, DockingStationDbRef) ->
-    % select stations with (Total - Occupied) > 0
-    MS = ets:fun2ms(fun({StationName, Total, Occupied}) when Total - Occupied > 0, StationName /= Name ->
-        {StationName, Total, Occupied} end),
-    {reply, ets:select(DockingStationDbRef, MS), DockingStationDbRef};
 handle_call(get_all_stations, _From, DockingStationDbRef) ->
     {reply, traverse_table(DockingStationDbRef, ets:first(DockingStationDbRef)), DockingStationDbRef}.
 

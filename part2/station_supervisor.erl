@@ -20,7 +20,7 @@ init(_Args) ->
         period => 5},
     ChildSpecs = #{id => docking,
 		   start => {docking, start_link, []},
-           restart => transient,
+           restart => transient,    % station should be allowed to terminate
 		   shutdown => brutal_kill,
            modules => [docking]},
     {ok, {SupFlags, [ChildSpecs]}}.

@@ -68,7 +68,6 @@ init(DockingStationDbRef) ->
 %% @doc Hand synchronous calls to the server.<br/>
 %% Station creation/update should be synchronous because to prevent race condition,
 %% updated state should be first stored before advancing to the next state. <br/>
-%% in case of non-existing server or a server crashes before sending reply, calling process will terminate
 handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationDbRef) ->
     case ets:insert_new(DockingStationDbRef, {StationName, Total, Occupied}) of
         true -> 
