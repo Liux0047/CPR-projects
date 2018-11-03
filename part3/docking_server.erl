@@ -1,67 +1,119 @@
+%% @author Xiao Liu <liux0047@gmail.com>
+%% @doc This module records the state of all docking stations using gen_server OPT behaviour
+%% It also provides interface for its client
+
 -module(docking_server).
 -behaviour(gen_server).
 -include_lib("stdlib/include/ms_transform.hrl").
 
--export([
-    start_link/0, init/1, handle_call/3, handle_cast/2, terminate/2,
-    create_station/3, update_station/3, stop/0,
-    find_moped/1, find_docking_point/1
-]).
+-export([start_link/1, init/1, handle_call/3, handle_cast/2, terminate/2]).
+-export([create_station/3, update_station/3, get_all_stations/0, stop/0, empty/0]).
+-export([find_moped/1, find_docking_point/1]).
 
-start_link() ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The client functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-init(_) ->
-    process_flag(trap_exit, true), % trapping exit to clean up state
-    % not using named_table to avoid access from other processes
-    DockingStationsDbRef = ets:new(docking_stations, [set, private]),
-    {ok, DockingStationsDbRef}.
+%% @doc Start the server called docking_server and links to the the caller process using gen_server:start_link.
+%% Also registering this docking station locally with docking_server.<br/>
+%% A reference of ETS table is required, because the state should be kept even if the process crashes 
+-spec start_link(DockingStationDbRef::atom()) -> {ok, pid()}.
+start_link(DockingStationDbRef) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, DockingStationDbRef, []).
 
+%% @doc Creates the internal data structure that's going to be used for this module.
+%% In future if the internal data structure can be changed without affecting client code. 
+%% Initially thi should be an empty construct.
+-spec empty() -> atom().
+empty() ->
+    ets:new(docking_stations, [set, public]).
+
+%% @doc Records a station creation; if the station is already created, return its latest state
+-spec create_station(Total::number(), Occupied::number(), StationName::atom()) -> 
+    {Total::number(), Occupied::number()}.
 create_station(Total, Occupied, StationName) ->
     gen_server:call(?MODULE, {create, {Total, Occupied, StationName}}).
 
+%% @doc Records a station update
+-spec update_station(Total::number(), Occupied::number(), StationName::atom()) -> ok.
 update_station(Total, Occupied, StationName) ->
-    gen_server:cast(?MODULE, {update, {Total, Occupied, StationName}}).
+    gen_server:call(?MODULE, {update, {Total, Occupied, StationName}}).
 
+%% @doc Find a list of stations with at least one moped
+-spec find_moped(Name::atom()) -> list().
 find_moped(Name) ->
     gen_server:call(?MODULE, {find_moped, Name}).
 
+%% @doc Find a list of stations with at least one docking point
+-spec find_docking_point(Name::atom()) -> list().
 find_docking_point(Name) ->
     gen_server:call(?MODULE, {find_docking_point, Name}).
 
+%% @doc Gets a list of all stations
+-spec get_all_stations() -> list().
+get_all_stations() ->
+    gen_server:call(?MODULE, get_all_stations).
 
-% station creation should be synchronous
-handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationsDbRef) ->
-    case ets:insert_new(DockingStationsDbRef, {StationName, Total, Occupied}) of
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The server callback functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% @doc Init callback of gen_server, trapping exit here 
+-spec init(DockingStationDbRef::atom()) -> {ok, atom()}.
+init(DockingStationDbRef) ->
+    process_flag(trap_exit, true), % trapping exit to enable termniate to execute
+    {ok, DockingStationDbRef}.
+
+%% @doc Hand synchronous calls to the server.<br/>
+%% Station creation/update should be synchronous because to prevent race condition,
+%% updated state should be first stored before advancing to the next state. <br/>
+handle_call({create, {Total, Occupied, StationName}}, _From, DockingStationDbRef) ->
+    case ets:insert_new(DockingStationDbRef, {StationName, Total, Occupied}) of
         true -> 
             % if there's no entry in ets
-            {reply, {Total, Occupied}, DockingStationsDbRef};
+            {reply, {Total, Occupied}, DockingStationDbRef};
         false -> 
             % otherwise use ets's record to recreate the station
-            [{_, T, O}] = ets:lookup(DockingStationsDbRef, StationName),
-            {reply, {T, O}, DockingStationsDbRef}
+            [{_, T, O}] = ets:lookup(DockingStationDbRef, StationName),
+            {reply, {T, O}, DockingStationDbRef}
     end;
-handle_call({find_moped, Name}, _From, DockingStationsDbRef) ->
+handle_call({update, {Total, Occupied, StationName}}, _From, DockingStationDbRef) ->
+    ets:insert(DockingStationDbRef, {StationName, Total, Occupied}), 
+    {reply, ok, DockingStationDbRef};
+handle_call({find_moped, Name}, _From, DockingStationDbRef) ->
+    % select stations with Occupied > 0
     MS = ets:fun2ms(fun({StationName, Total, Occupied}) when Occupied > 0, StationName /= Name ->
         {StationName, Total, Occupied} end),
-    {reply, ets:select(DockingStationsDbRef, MS), DockingStationsDbRef};
-handle_call({find_docking_point, Name}, _From, DockingStationsDbRef) ->
+    {reply, ets:select(DockingStationDbRef, MS), DockingStationDbRef};
+handle_call({find_docking_point, Name}, _From, DockingStationDbRef) ->
+    % select stations with (Total - Occupied) > 0
     MS = ets:fun2ms(fun({StationName, Total, Occupied}) when Total - Occupied > 0, StationName /= Name ->
         {StationName, Total, Occupied} end),
-    {reply, ets:select(DockingStationsDbRef, MS), DockingStationsDbRef}.
+    {reply, ets:select(DockingStationDbRef, MS), DockingStationDbRef};
+handle_call(get_all_stations, _From, DockingStationDbRef) ->
+    {reply, traverse_table(DockingStationDbRef, ets:first(DockingStationDbRef)), DockingStationDbRef}.
 
-
-% station state update could be asynchronous
-handle_cast({update, {Total, Occupied, StationName}}, DockingStationsDbRef) ->
-    ets:insert(DockingStationsDbRef, {StationName, Total, Occupied}), 
-    {noreply, DockingStationsDbRef};
-handle_cast(stop, DockingStationsDbRef) ->
-    {stop, normal, DockingStationsDbRef}.
-
+%% @doc Stop the server.
+-spec stop() -> ok.
 stop() ->
     gen_server:cast(?MODULE, stop).
 
-terminate(_Reason, DockingStationsDbRef) ->
-    ets:delete(DockingStationsDbRef),
+%% @doc Handle asynchronous call, currently only handling stop message 
+handle_cast(stop, DockingStationDbRef) ->
+    {stop, normal, DockingStationDbRef}.
+
+%% @doc Terminate the server and do any cleanup needed here
+terminate(_Reason, _DockingStationDbRef) ->
+    % ets table is connected with the process that creates them
+    % if the supervisor process terminates, the table will be deleted automatically
     ok.
 
+% implementing handle_info/2 could prevent process crash from random messages sent to docking_server
+% However this is considered defensive programming, thus not encouraged in concurrent model
+
+traverse_table(_DockingStationDbRef, '$end_of_table') ->
+    [];
+traverse_table(DockingStationDbRef, Current) ->
+    [Elem] = ets:lookup(DockingStationDbRef, Current),
+    [Elem | traverse_table(DockingStationDbRef, ets:next(DockingStationDbRef, Current))].

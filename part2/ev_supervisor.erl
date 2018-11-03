@@ -1,6 +1,6 @@
 %% @author Xiao Liu <liux0047@gmail.com>
 %% @doc This supervisor is the entry point to the application 
-%% It is supervising docking_server, docking_listener and station_supervisor
+%% It is supervising docking_server and station_supervisor
 
 -module(ev_supervisor).
 -behaviour(supervisor).
@@ -15,7 +15,7 @@ start_link() ->
 
 %% @doc Init callback of supervisor OTP behaviour. 
 %% Creates an ETS table and pass the table reference to docking_server.
-%% Starts docking_server, station_supervisor, station_recoverer, docking_listener sequentially.
+%% Starts docking_server, station_supervisor, station_recoverer sequentially.
 -spec init(_Args::term()) -> {ok, term(), term()}.
 init(_Args) ->
     % creating ETS in supervisor to avoid losing state when server process crashes
