@@ -22,7 +22,7 @@ start_link(DockingStationDbRef) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, DockingStationDbRef, []).
 
 %% @doc Creates the internal data structure that's going to be used for this module.
-%% In future if the internal data structure can be changed without changing client code. 
+%% In future if the internal data structure can be changed without affecting client code. 
 %% Initially thi should be an empty construct.
 -spec empty() -> atom().
 empty() ->
