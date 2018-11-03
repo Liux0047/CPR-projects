@@ -1,2 +1,3 @@
 %% encoding: UTF-8
-{modules,[docking,docking_server]}.
+{modules,[docking,docking_server,ev_supervisor,station_recoverer,
+          station_supervisor]}.

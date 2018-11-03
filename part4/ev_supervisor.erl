@@ -8,10 +8,15 @@
 
 -export([init/1, start_child/3, start_link/0]).
 
-%% @doc
+%% @doc Start the supervisor and registers the process name
+-spec start_link() -> {ok, pid()}.
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
+%% @doc Init callback of supervisor OTP behaviour. 
+%% Creates an ETS table and pass the table reference to docking_server.
+%% Starts docking_server, station_supervisor, station_recoverer, docking_listener sequentially.
+-spec init(_Args::term()) -> {ok, term(), term()}.
 init(_Args) ->
     % creating ETS in supervisor to avoid losing state when server process crashes
     % not using named_table to avoid access from other processes
@@ -47,6 +52,9 @@ init(_Args) ->
         ],
     {ok, {SupFlags, ChildSpecs}}.
 
+%% @doc Start a station within this supervision tree. 
+%% If the stations has been previously started, use its state in ETS table
+-spec start_child(Total::number(), Occupied::number(), Name::atom()) -> {ok, pid()}.
 start_child(Total, Occupied, Name) ->
     station_supervisor:start_child(Total, Occupied, Name).
 

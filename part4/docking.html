@@ -39,7 +39,7 @@
 
 <h3 class="function"><a name="callback_mode-0">callback_mode/0</a></h3>
 <div class="spec">
-<p><tt>callback_mode() -&gt; any()</tt></p>
+<p><tt>callback_mode() -&gt; state_functions</tt><br></p>
 </div><p>Use state_functions for finite state machine</p>
 
 <h3 class="function"><a name="empty-3">empty/3</a></h3>
@@ -70,7 +70,8 @@
 <h3 class="function"><a name="idle-3">idle/3</a></h3>
 <div class="spec">
 <p><tt>idle(X1, X2, X3) -&gt; any()</tt></p>
-</div><p>Idle state of Module:StateName/3 from gen_statem when Total &gt; Occupied &gt; 0</p>
+</div><p>Idle state of Module:StateName/3 from gen_statem when Total &gt; Occupied &gt; 0.
+  The station will stay in idle state till it reaches empty or full conditino</p>
 
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
