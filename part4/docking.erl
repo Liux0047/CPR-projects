@@ -14,6 +14,10 @@
     release_moped_remote/2, secure_moped_remote/2
 ]).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The client functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% @doc Start a docking station called Name and links to the the caller process using gen_statem:start_link.
 %% Also registering this docking station locally with Name.<br/>
 %% `Total': Total number of docking stations<br/>
@@ -26,7 +30,6 @@ start_link(Total, Occupied, Name) ->
     {T, O}= docking_server:create_station(Total, Occupied, Name),
     gen_statem:start_link({local,Name}, ?MODULE, {T, O}, []).
 
-
 %% @doc Init callback of gen_statem; initializing the state of docking station
 -spec init({Total::number(), Occupied::number()}) -> {ok, atom(), {number(), number()}}.
 init({Total, 0}) ->
@@ -35,6 +38,50 @@ init({Total, Total}) ->
     {ok, full, {Total, Total}};
 init({Total, Occupied}) ->
     {ok, idle, {Total, Occupied}}. 
+
+
+%% @doc Release a moped from the station. Returns {error, empty} if station is empty
+-spec release_moped(Name::atom()) -> ok | {error, empty}.
+release_moped(Name) ->
+    gen_statem:call(Name, {release_moped, Name}).
+
+%% @doc Secure a moped from the station. Returns {error, full} if station is full
+-spec secure_moped(Name::atom()) -> ok | {error, full}.
+secure_moped(Name) ->
+    gen_statem:call(Name, {secure_moped, Name}).
+
+%% @doc Gets the information about the station
+-spec get_info(Name::atom()) -> term().
+get_info(Name) ->
+    gen_statem:call(Name, {get_info, Name}).
+
+%% @doc Find the list of stations that have mopeds available, excluding the one interrogated
+-spec find_moped(Name::atom()) -> list().
+find_moped(Name) ->
+    lists:map(fun format_response/1, docking_server:find_moped(Name)).
+
+%% @doc Find the list of stations that have docking points available, excluding the one interrogated
+-spec find_docking_point(Name::atom()) -> list().
+find_docking_point(Name) ->
+    lists:map(fun format_response/1, docking_server:find_docking_point(Name)).
+
+
+release_moped_remote(Name, ServerNode) ->
+    call_remote(Name, ServerNode, release_moped).
+
+secure_moped_remote(Name, ServerNode) ->
+    call_remote(Name, ServerNode, secure_moped).
+
+call_remote(Name, ServerNode, Action) ->
+    {docking_listener, ServerNode} ! {Action, Name, self()},
+    receive
+        {reply, ok} -> ok;
+        {reply, error, Reason} -> {error, Reason}
+    end.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% The Finite State Machine
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% @doc Empty state of Module:StateName/3 from gen_statem when Occupied = 0
 empty({call, From}, {release_moped, _Name}, {_Total, 0}) ->
@@ -48,7 +95,8 @@ empty({call, From}, {get_info, Name}, {Total, 0}) ->
     gen_statem:reply(From, format_response({Name, Total, 0})),
     keep_state_and_data.
     
-%% @doc Idle state of Module:StateName/3 from gen_statem when Total > Occupied > 0
+%% @doc Idle state of Module:StateName/3 from gen_statem when Total > Occupied > 0. 
+%% The station will stay in idle state till it reaches empty or full conditino
 idle({call, From}, {release_moped, Name}, {Total, Occupied}) ->
     docking_server:update_station(Total, Occupied - 1, Name),
     gen_statem:reply(From, ok),
@@ -80,36 +128,11 @@ full({call, From}, {get_info, Name}, {Total, _Occupied}) ->
     keep_state_and_data.
 
 
-%% @doc Release a moped from the station. Returns {error, empty} if station is empty
--spec release_moped(Name::atom()) -> ok | {error, empty}.
-release_moped(Name) ->
-    gen_statem:call(Name, {release_moped, Name}).
-
-%% @doc Secure a moped from the station. Returns {error, full} if station is full
--spec secure_moped(Name::atom()) -> ok | {error, full}.
-secure_moped(Name) ->
-    gen_statem:call(Name, {secure_moped, Name}).
-
-%% @doc Gets the information about the station
--spec get_info(Name::atom()) -> term().
-get_info(Name) ->
-    gen_statem:call(Name, {get_info, Name}).
-
-%% @doc Find the list of stations that have mopeds available, excluding the one interrogated
--spec find_moped(Name::atom()) -> list().
-find_moped(Name) ->
-    lists:map(fun format_response/1, docking_server:find_moped(Name)).
-
-%% @doc Find the list of stations that have docking points available, excluding the one interrogated
--spec find_docking_point(Name::atom()) -> list().
-find_docking_point(Name) ->
-    lists:map(fun format_response/1, docking_server:find_docking_point(Name)).
-
-
 format_response({StationName, Total, Occupied}) ->
     {StationName, [{total, Total}, {occupied, Occupied}, {free, Total - Occupied}]}.
 
 %% @doc Use state_functions for finite state machine
+-spec callback_mode() -> state_functions.
 callback_mode() ->
     state_functions.
 
@@ -121,19 +144,6 @@ stop(Name) ->
 %% @doc Terminate callback for any cleanup
 terminate(_Reason, _State, _Data) ->
     ok.
-
-release_moped_remote(Name, ServerNode) ->
-    call_remote(Name, ServerNode, release_moped).
-
-secure_moped_remote(Name, ServerNode) ->
-    call_remote(Name, ServerNode, secure_moped).
-
-call_remote(Name, ServerNode, Action) ->
-    {docking_listener, ServerNode} ! {Action, Name, self()},
-    receive
-        {reply, ok} -> ok;
-        {reply, error, Reason} -> {error, Reason}
-    end.
 
 % Tests
 given_test() -> 

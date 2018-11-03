@@ -1,9 +1,14 @@
+%% @author Xiao Liu <liux0047@gmail.com>
+%% @doc This supervisor is the entry point to the application 
+%% It is supervising docking_server, docking_listener and station_supervisor
+
 -module(ev_supervisor).
 -behaviour(supervisor).
 -include_lib("eunit/include/eunit.hrl").
 
 -export([init/1, start_child/3, start_link/0]).
 
+%% @doc
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 

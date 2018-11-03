@@ -22,13 +22,13 @@
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#create_station-3">create_station/3</a></td><td>Records a station creation; if the station is already created, return its latest state.</td></tr>
 <tr><td valign="top"><a href="#find_docking_point-1">find_docking_point/1</a></td><td>Find a list of stations with at least one docking point.</td></tr>
 <tr><td valign="top"><a href="#find_moped-1">find_moped/1</a></td><td>Find a list of stations with at least one moped.</td></tr>
-<tr><td valign="top"><a href="#get_all_stations-0">get_all_stations/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td>Hand synchrounous calls to the server.</td></tr>
-<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#get_all_stations-0">get_all_stations/0</a></td><td>Gets a list of all stations.</td></tr>
+<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td>Hand synchronous calls to the server.</td></tr>
+<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td>Handle asynchronous call, currently only handling stop message.</td></tr>
 <tr><td valign="top"><a href="#init-1">init/1</a></td><td>Init callback of gen_server, trapping exit here.</td></tr>
 <tr><td valign="top"><a href="#start_link-1">start_link/1</a></td><td>Start the server called docking_server and links to the the caller process using gen_server:start_link.</td></tr>
-<tr><td valign="top"><a href="#stop-0">stop/0</a></td><td></td></tr>
-<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#stop-0">stop/0</a></td><td>Stop the server.</td></tr>
+<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>Terminate the server and do any cleanup needed here.</td></tr>
 <tr><td valign="top"><a href="#update_station-3">update_station/3</a></td><td>Records a station update.</td></tr>
 </table>
 
@@ -51,13 +51,13 @@
 
 <h3 class="function"><a name="get_all_stations-0">get_all_stations/0</a></h3>
 <div class="spec">
-<p><tt>get_all_stations() -&gt; any()</tt></p>
-</div>
+<p><tt>get_all_stations() -&gt; list()</tt><br></p>
+</div><p>Gets a list of all stations</p>
 
 <h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
 <div class="spec">
 <p><tt>handle_call(X1, From, DockingStationDbRef) -&gt; any()</tt></p>
-</div><p>Hand synchrounous calls to the server.<br>
+</div><p>Hand synchronous calls to the server.<br>
   Station creation/update should be synchronous because to prevent race condition,
   updated state should be first stored before advancing to the next state. <br>
   in case of non-existing server or a server crashes before sending reply, calling process will terminate</p>
@@ -65,7 +65,7 @@
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
 <p><tt>handle_cast(X1, DockingStationDbRef) -&gt; any()</tt></p>
-</div>
+</div><p>Handle asynchronous call, currently only handling stop message</p>
 
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
@@ -81,13 +81,13 @@
 
 <h3 class="function"><a name="stop-0">stop/0</a></h3>
 <div class="spec">
-<p><tt>stop() -&gt; any()</tt></p>
-</div>
+<p><tt>stop() -&gt; ok</tt><br></p>
+</div><p>Stop the server.</p>
 
 <h3 class="function"><a name="terminate-2">terminate/2</a></h3>
 <div class="spec">
 <p><tt>terminate(Reason, DockingStationDbRef) -&gt; any()</tt></p>
-</div>
+</div><p>Terminate the server and do any cleanup needed here</p>
 
 <h3 class="function"><a name="update_station-3">update_station/3</a></h3>
 <div class="spec">
