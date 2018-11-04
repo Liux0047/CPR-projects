@@ -65,18 +65,29 @@ find_moped(Name) ->
 find_docking_point(Name) ->
     lists:map(fun format_response/1, docking_server:find_docking_point(Name)).
 
-
+%% @doc Release a moped from a station on another node
+-spec release_moped_remote(Name::atom(), ServerNode::node()) -> ok | {error, term()}.
 release_moped_remote(Name, ServerNode) ->
     call_remote(Name, ServerNode, release_moped).
 
+%% @doc Secures a moped to a station on another node
+-spec secure_moped_remote(Name::atom(), ServerNode::node()) -> ok | {error, term()}.
 secure_moped_remote(Name, ServerNode) ->
     call_remote(Name, ServerNode, secure_moped).
 
 call_remote(Name, ServerNode, Action) ->
+    flush(),
     {docking_listener, ServerNode} ! {Action, Name, self()},
     receive
         {reply, ok} -> ok;
-        {reply, error, Reason} -> {error, Reason}
+        {reply, {error, Reason}} -> {error, Reason}
+    after 5000 ->
+        {error, timeout}
+    end.
+
+flush() ->
+    receive _ -> flush()
+    after 0 -> ok
     end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -145,38 +156,3 @@ stop(Name) ->
 terminate(_Reason, _State, _Data) ->
     ok.
 
-% Tests
-given_test() -> 
-    [
-        {ok, _} = start_link(3,1, kellogg),
-        ok = release_moped(kellogg),
-        {error, empty} = release_moped(kellogg),
-        ok = secure_moped(kellogg),
-        ok = secure_moped(kellogg),
-        ok = secure_moped(kellogg),
-        {error, full} = secure_moped(kellogg),
-        {kellogg, [{total, 3}, {occupied, 3}, {free, 0}]} = get_info(kellogg),
-        stop(kellogg)
-    ].
-
-empty_dock_test() ->
-    [
-        {ok, _} = start_link(3,0, empty_dock),
-        {empty_dock, [{total, 3}, {occupied, 0}, {free, 3}]} = get_info(empty_dock),
-        {error, empty} = release_moped(empty_dock),
-        ok = secure_moped(empty_dock),
-        ok = secure_moped(empty_dock),
-        {empty_dock, [{total, 3}, {occupied, 2}, {free, 1}]} = get_info(empty_dock),
-        ok = secure_moped(empty_dock),
-        {error, full} = secure_moped(empty_dock),
-        stop(empty_dock)
-    ].
-
-full_dock_test() ->
-    [
-        docking_server:start_link(),
-        {ok, _} = start_link(1,1, full_dock),
-        {error, full} = secure_moped(full_dock),
-        {full_dock, [{total, 1}, {occupied, 1}, {free, 0}]} = get_info(full_dock),
-        stop(full_dock)
-    ].
