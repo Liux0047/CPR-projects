@@ -11,6 +11,7 @@ start_link() ->
     register(?MODULE, Pid),
     {ok, Pid}.
 
+%% @doc Initialize the listener.
 init() ->
     listen().
 

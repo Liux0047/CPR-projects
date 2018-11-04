@@ -20,6 +20,7 @@
   It also provides interface for its client
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#create_station-3">create_station/3</a></td><td>Records a station creation; if the station is already created, return its latest state.</td></tr>
+<tr><td valign="top"><a href="#empty-0">empty/0</a></td><td>Creates the internal data structure that's going to be used for this module.</td></tr>
 <tr><td valign="top"><a href="#find_docking_point-1">find_docking_point/1</a></td><td>Find a list of stations with at least one docking point.</td></tr>
 <tr><td valign="top"><a href="#find_moped-1">find_moped/1</a></td><td>Find a list of stations with at least one moped.</td></tr>
 <tr><td valign="top"><a href="#get_all_stations-0">get_all_stations/0</a></td><td>Gets a list of all stations.</td></tr>
@@ -38,6 +39,13 @@
 <div class="spec">
 <p><tt>create_station(Total::number(), Occupied::number(), StationName::atom()) -&gt; {Total::number(), Occupied::number()}</tt><br></p>
 </div><p>Records a station creation; if the station is already created, return its latest state</p>
+
+<h3 class="function"><a name="empty-0">empty/0</a></h3>
+<div class="spec">
+<p><tt>empty() -&gt; atom()</tt><br></p>
+</div><p>Creates the internal data structure that's going to be used for this module.
+  In future if the internal data structure can be changed without affecting client code.
+  Initially thi should be an empty construct.</p>
 
 <h3 class="function"><a name="find_docking_point-1">find_docking_point/1</a></h3>
 <div class="spec">
@@ -59,8 +67,7 @@
 <p><tt>handle_call(X1, From, DockingStationDbRef) -&gt; any()</tt></p>
 </div><p>Hand synchronous calls to the server.<br>
   Station creation/update should be synchronous because to prevent race condition,
-  updated state should be first stored before advancing to the next state. <br>
-  in case of non-existing server or a server crashes before sending reply, calling process will terminate</p>
+  updated state should be first stored before advancing to the next state. <br></p>
 
 <h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
 <div class="spec">
